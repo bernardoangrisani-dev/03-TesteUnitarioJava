@@ -1,133 +1,192 @@
 package contabancaria;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-/**
- * Testes unitários para a classe Conta.
- *
- * PARTE 1 — Testes de exemplo (Construtor) já estão prontos.
- *           Observe o padrão AAA e o uso de @Test e @ParameterizedTest.
- *
- * PARTE 2 — Você deve escrever os testes para os demais métodos
- *           seguindo rigorosamente o ciclo TDD: Red → Green → Refactor.
- *
- * Para cada método da classe Conta, crie testes que cubram:
- *   ✅ O cenário de sucesso (caminho feliz)
- *   ❌ Cada regra de validação (cenários de exceção)
- *   🔄 Casos de borda (valores limites)
- */
+import static org.junit.jupiter.api.Assertions.*;
+
 class ContaTest {
 
-    // =======================================================
-    //  PARTE 1 — EXEMPLO GUIADO: Testes do Construtor
-    //  Observe o padrão Arrange-Act-Assert (AAA)
-    // =======================================================
+    // --- Testes do Construtor (Já existentes no projeto) ---
 
     @Test
     void construtor_DadosValidos_CriaContaCorretamente() {
-        // Arrange & Act
-        var conta = new Conta("Maria", 100);
-
-        // Assert
+        var conta = new Conta("Maria", 100.0);
         assertEquals("Maria", conta.getTitular());
-        assertEquals(100, conta.getSaldo());
+        assertEquals(100.0, conta.getSaldo(), 0.001);
         assertTrue(conta.isAtiva());
     }
 
     @Test
     void construtor_SemSaldoInicial_CriaContaComSaldoZero() {
-        // Arrange & Act
         var conta = new Conta("João");
-
-        // Assert
         assertEquals("João", conta.getTitular());
-        assertEquals(0, conta.getSaldo());
+        assertEquals(0.0, conta.getSaldo(), 0.001);
         assertTrue(conta.isAtiva());
     }
 
     @Test
     void construtor_TitularNulo_LancaIllegalArgumentException() {
-        // Assert — verifica que a exceção é lançada
-        assertThrows(IllegalArgumentException.class, () -> new Conta(null));
+        assertThrows(IllegalArgumentException.class, () -> new Conta(null, 100.0));
     }
 
     @Test
     void construtor_TitularVazio_LancaIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> new Conta(""));
+        assertThrows(IllegalArgumentException.class, () -> new Conta("", 100.0));
+        assertThrows(IllegalArgumentException.class, () -> new Conta("   ", 100.0));
     }
 
     @Test
     void construtor_SaldoNegativo_LancaIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> new Conta("Maria", -50));
+        assertThrows(IllegalArgumentException.class, () -> new Conta("Maria", -1.0));
     }
 
     @ParameterizedTest
     @CsvSource({
-        "Ana,    0",
-        "Carlos, 1000",
-        "Beatriz, 0.01"
+            "Ana, 0.0",
+            "Carlos, 50.5",
+            "Beatriz, 1000.0"
     })
     void construtor_VariosValoresValidos_CriaContaCorretamente(String titular, double saldo) {
-        // Act
         var conta = new Conta(titular, saldo);
-
-        // Assert
         assertEquals(titular, conta.getTitular());
         assertEquals(saldo, conta.getSaldo(), 0.001);
         assertTrue(conta.isAtiva());
     }
 
-    // =======================================================
-    //  PARTE 2 — ESCREVA OS TESTES ABAIXO (TDD)
-    //  Lembre-se: escreva o teste PRIMEIRO, veja FALHAR (Red),
-    //  depois implemente o código para PASSAR (Green),
-    //  e por fim faça Refactor se necessário.
-    // =======================================================
+    // --- Novos Testes (Parte 2 - TDD) ---
 
-    // =======================================================
-    //  Testes para depositar
-    //  Sugestão de testes:
-    //    - Depósito com valor válido atualiza o saldo
-    //    - Depósito com valor zero lança IllegalArgumentException
-    //    - Depósito com valor negativo lança IllegalArgumentException
-    //    - Depósito em conta inativa lança IllegalStateException
-    // =======================================================
+    @Test
+    void depositar_ValorValido_AtualizaSaldo() {
+        // Arrange
+        var conta = new Conta("Maria", 100);
 
+        // Act
+        conta.depositar(50);
 
-    // =======================================================
-    //  Testes para sacar
-    //  Sugestão de testes:
-    //    - Saque com valor válido atualiza o saldo
-    //    - Saque com valor maior que saldo lança IllegalStateException
-    //    - Saque com valor zero lança IllegalArgumentException
-    //    - Saque com valor negativo lança IllegalArgumentException
-    //    - Saque em conta inativa lança IllegalStateException
-    // =======================================================
+        // Assert
+        assertEquals(150, conta.getSaldo(), 0.001);
+    }
 
+    @Test
+    void depositar_ValorZero_LancaIllegalArgumentException() {
+        var conta = new Conta("Maria", 100);
 
-    // =======================================================
-    //  Testes para transferir
-    //  Sugestão de testes:
-    //    - Transferência válida atualiza saldo de ambas as contas
-    //    - Transferência com saldo insuficiente lança exceção
-    //    - Transferência com valor zero/negativo lança exceção
-    //    - Transferência com conta origem inativa lança exceção
-    //    - Transferência com conta destino inativa lança exceção
-    // =======================================================
+        assertThrows(IllegalArgumentException.class, () -> conta.depositar(0));
+        assertEquals(100, conta.getSaldo(), 0.001);
+    }
 
+    @Test
+    void depositar_ValorNegativo_LancaIllegalArgumentException() {
+        var conta = new Conta("Maria", 100);
 
-    // =======================================================
-    //  Testes para encerrar
-    //  Sugestão de testes:
-    //    - Encerrar conta com saldo zero funciona
-    //    - Encerrar conta com saldo lança IllegalStateException
-    //    - Encerrar conta já inativa lança IllegalStateException
-    //    - Conta encerrada tem isAtiva() == false
-    // =======================================================
+        assertThrows(IllegalArgumentException.class, () -> conta.depositar(-10));
+        assertEquals(100, conta.getSaldo(), 0.001);
+    }
 
+    @Test
+    void sacar_ValorValido_AtualizaSaldo() {
+        // Arrange
+        var conta = new Conta("Maria", 100);
+
+        // Act
+        conta.sacar(40);
+
+        // Assert
+        assertEquals(60, conta.getSaldo(), 0.001);
+    }
+
+    @Test
+    void sacar_ValorZeroOuNegativo_LancaIllegalArgumentException() {
+        var conta = new Conta("Maria", 100);
+
+        assertThrows(IllegalArgumentException.class, () -> conta.sacar(0));
+        assertThrows(IllegalArgumentException.class, () -> conta.sacar(-10));
+        assertEquals(100, conta.getSaldo(), 0.001); // Confirma que o saldo foi preservado
+    }
+
+    @Test
+    void encerrar_ComSaldoZero_InativaConta() {
+        // Arrange
+        var conta = new Conta("Maria", 0);
+
+        // Act
+        conta.encerrar();
+
+        // Assert
+        assertFalse(conta.isAtiva());
+    }
+
+    @Test
+    void encerrar_ComSaldoPositivo_LancaIllegalStateException() {
+        // Arrange
+        var conta = new Conta("Maria", 10.0);
+
+        // Act & Assert
+        assertThrows(IllegalStateException.class, () -> conta.encerrar());
+        assertTrue(conta.isAtiva());
+        assertEquals(10.0, conta.getSaldo(), 0.001);
+    }
+
+    @Test
+    void encerrar_ContaJaInativa_LancaIllegalStateException() {
+        // Arrange
+        var conta = new Conta("Maria", 0);
+        conta.encerrar(); // Encerra a conta pela primeira vez (fica inativa)
+
+        // Act & Assert
+        assertThrows(IllegalStateException.class, () -> conta.encerrar()); // Tenta encerrar de novo
+        assertFalse(conta.isAtiva());
+    }
+
+    @Test
+    void depositar_ContaEncerrada_LancaIllegalStateException() {
+        // Arrange
+        var conta = new Conta("Maria", 100);
+        conta.sacar(100); // Zera o saldo para permitir o encerramento
+        conta.encerrar(); // Encerra a conta (saldo fica 0 e ativa = false)
+
+        // Act & Assert
+        assertThrows(IllegalStateException.class, () -> conta.depositar(50));
+        assertEquals(0, conta.getSaldo(), 0.001);
+    }
+
+    @Test
+    void sacar_ContaEncerrada_LancaIllegalStateException() {
+        // Arrange
+        var conta = new Conta("Maria", 100);
+        conta.sacar(100); // Zera o saldo
+        conta.encerrar(); // Encerra a conta
+
+        // Act & Assert
+        assertThrows(IllegalStateException.class, () -> conta.sacar(10));
+        assertEquals(0, conta.getSaldo(), 0.001);
+    }
+
+    @Test
+    void transferir_ValorValido_AtualizaSaldosDeAmbasContas() {
+        // Arrange
+        var contaOrigem = new Conta("Maria", 200.0);
+        var contaDestino = new Conta("João", 50.0);
+
+        // Act
+        contaOrigem.transferir(50.0, contaDestino);
+
+        // Assert
+        assertEquals(150.0, contaOrigem.getSaldo(), 0.001);
+        assertEquals(100.0, contaDestino.getSaldo(), 0.001);
+    }
+
+    @Test
+    void transferir_SaldoInsuficiente_LancaIllegalStateException() {
+        // Arrange
+        var contaOrigem = new Conta("Maria", 50.0);
+        var contaDestino = new Conta("João", 100.0);
+
+        // Act & Assert
+        assertThrows(IllegalStateException.class, () -> contaOrigem.transferir(100.0, contaDestino));
+        assertEquals(50.0, contaOrigem.getSaldo(), 0.001); // Saldo preservado
+        assertEquals(100.0, contaDestino.getSaldo(), 0.001); // Destino não alterado
+    }
 }
